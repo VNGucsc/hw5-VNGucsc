@@ -21,8 +21,11 @@ def LVN(program):
     saved_instr = 0 
 
     binary_op_re = re.compile('(vr\d+) = (addi|addf|muli|mulf|subi|subf|divi|divf)\((vr\d+|_new_name\d+), ?(vr\d+|_new_name\d+)\);')
+    #matches vrX = op(vrX,vrX)
     unary_op_re = re.compile("(vr\d+) = (vr_int2float|vr_float2int)\((vr\d+)\);")
+    #matches vrX = op(vrX)
     convert_re = re.compile('(vr\d+) = (int2vr|float2vr|)\(([\d.]+)\);')
+    #matches vrX = op(X)
     
     for line in program:
         strip_line = line.strip() #stripping whitespace
@@ -61,6 +64,7 @@ def LVN(program):
                 vn_reg_table[val_num] = dest
                 opt_ir.append(strip_line)
                 val_num += 1
+            #This checks if this operation and operands has been seen before. If it has, then it replaces it, otherwise add to the table of seen operation and operands.
 
         elif unary_op_re.match(line):
             dest, op, arg = unary_op_re.match(line).groups()
@@ -84,7 +88,8 @@ def LVN(program):
                 vn_reg_table[val_num] = dest
                 opt_ir.append(line)
                 val_num += 1
-    
+            #This checks if this operation and operands has been seen before. If it has, then it replaces it, otherwise add to the table of seen operation and operands.
+        
         elif convert_re.match(strip_line):
             if convert_re.match(strip_line):
                 dest, op, val = convert_re.match(strip_line).groups()
@@ -101,6 +106,8 @@ def LVN(program):
                     vn_reg_table[val_num] = dest
                     opt_ir.append(strip_line)
                     val_num += 1
+                #This checks if this operation and operands has been seen before. If it has, then it replaces it, otherwise add to the table of seen operation and operands.
+        
         else:
             opt_ir.append(strip_line)
 
