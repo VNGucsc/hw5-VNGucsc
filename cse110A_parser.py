@@ -420,20 +420,17 @@ class Parser:
                 match = re.match('int2vr\((\d+)\);',right.strip())
                 if match:
                     start = int(match.group(1))
-            #Captures the start value of the for loop. Should be 0.
+        #Captures the start value of the for loop. Should be 0.
         if isinstance(expr_ast, ASTLtNode):
             if isinstance(expr_ast.r_child,ASTNumNode):
                 end = int(expr_ast.r_child.value)
         
-        #print(f'Loop End Assignment Program: {loop_end_assignment_program}')
         if len(loop_end_assignment_program) >= 1 and induction_var is not None and 'addi' in loop_end_assignment_program[1]:
             unrollable = True
-        #print(f"Unrollable 1: {unrollable}")
         
         for line in loop_program:
             if 'branch' in line or 'beq' in line:
                 unrollable = False
-        #print(f'Unrollable 2: {unrollable}')
         
         if self.unroll_factor == 1:
             unrollable = False
@@ -443,19 +440,15 @@ class Parser:
             if trip_count % self.unroll_factor != 0:
                 unrollable = False
         
-        #print(f'Unrollable: {unrollable} Start: {start} End: {end} Trip Count: {trip_count} Induction Var: {induction_var}')
         
         
         if unrollable:
-            og_code = original_assignment_program[:] #shallow copy macro
             unrolled = []
             for i in range(0, trip_count, trip_count//self.unroll_factor):
                 cloned = []
                 for line in loop_program:
                     cloned.append(line)
                 unrolled += cloned
-        
-        #print(f'Unrollable: {unrollable} Start: {start} End {end} Trip Count: {trip_count} Induction Var: {induction_var} Unroll Factor: {self.unroll_factor}\n')
 
         compare_ins = ["%s = int2vr(0);" % (zero_vr), "beq(%s, %s, %s);" % (expr_ast.vr, zero_vr, end_label)]  # Branch out if expression == 0
         branch_ins = ["branch(%s);" % (loop_start_label)]  # Instruction to branch back to the start of the loop (right before evaluating the expression again)
