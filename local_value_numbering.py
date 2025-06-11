@@ -11,5 +11,6 @@ def LVN(program):
     # 2. a list of new variables required (e.g. numbered virtual
     # registers and program variables)
 
-    # 3. a number with how many instructions were replaced    
+    # 3. a number with how many instructions were replaced
+    
     return program,[],0

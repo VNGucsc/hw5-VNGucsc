@@ -1,6 +1,8 @@
 from cse110A_ast import *
+
 from typing import Callable,List,Tuple,Optional
 from scanner import Lexeme,Token,Scanner
+import re
 
 # Extra classes:
 
@@ -136,6 +138,9 @@ class Parser:
         self.vra = VRAllocator()
         self.nlg = NewLabelGenerator()
         self.nng = NewNameGenerator()
+        
+        self.unroll_factor = 1
+        #Adding unroll factor as a class variable for ease of tracking.
 
         self.function_name = None
         self.function_args = []
@@ -155,7 +160,13 @@ class Parser:
             node.vr = self.vra.mk_new_vr()
 
 
-    def parse(self, s: str, uf: int) -> List[str]:
+    def parse(self, s: str, uf:int) -> List[str]:
+        
+        if uf is not None:
+            self.unroll_factor = uf
+        else:
+            self.unroll_factor = 1
+        #setting unroll factor into the class itself for ease of access.
 
         # Set the scanner and get the first token
         self.scanner.input_string(s)
@@ -387,15 +398,61 @@ class Parser:
         type_inference(expr_ast)
         self.allocate_vrs(expr_ast)
         expr_program = expr_ast.linearize_code() 
-
         self.eat(Token.SEMI)
         loop_end_assignment_program = self.parse_assignment_statement_base()
         self.eat(Token.RPAR)
         loop_program = self.parse_statement()
-        
         loop_start_label = self.nlg.mk_new_label()
         end_label = self.nlg.mk_new_label()
         zero_vr = self.vra.mk_new_vr()
+        
+        unrollable = False #pre-assigned to prevent errors
+        start = None
+        end = None
+        trip_count = None
+        induction_var = None
+        
+
+        if len(original_assignment_program) >= 1 and '=' in original_assignment_program[0]:
+            left, right = original_assignment_program[0].split('=')
+            induction_var = left.strip()
+            if "int2vr" in right:
+                match = re.match('int2vr\((\d+)\);',right.strip())
+                if match:
+                    start = int(match.group(1))
+            #Captures the start value of the for loop. Should be 0.
+        if isinstance(expr_ast, ASTLtNode):
+            if isinstance(expr_ast.r_child,ASTNumNode):
+                end = int(expr_ast.r_child.value)
+        
+        #print(f'Loop End Assignment Program: {loop_end_assignment_program}')
+        if len(loop_end_assignment_program) >= 1 and induction_var is not None and 'addi' in loop_end_assignment_program[1]:
+            unrollable = True
+        #print(f"Unrollable 1: {unrollable}")
+        
+        for line in loop_program:
+            if 'branch' in line or 'beq' in line:
+                unrollable = False
+        #print(f'Unrollable 2: {unrollable}')
+        
+        if unrollable and start is not None and end is not None:
+            trip_count = end - start
+            if trip_count % self.unroll_factor != 0:
+                unrollable = False
+        
+        #print(f'Unrollable: {unrollable} Start: {start} End: {end} Trip Count: {trip_count} Induction Var: {induction_var}')
+
+        if unrollable:
+            unrolled_code = original_assignment_program[:] #shallow copy macro
+            for i in range(0, trip_count, trip_count//self.unroll_factor):
+                cloned = []
+                for line in loop_program:
+                    cloned.append(line)
+                unrolled_code += cloned
+
+            return unrolled_code
+        
+        #print(f'Unrollable: {unrollable} Start: {start} End {end} Trip Count: {trip_count} Induction Var: {induction_var} Unroll Factor: {self.unroll_factor}\n')
 
         compare_ins = ["%s = int2vr(0);" % (zero_vr), "beq(%s, %s, %s);" % (expr_ast.vr, zero_vr, end_label)]  # Branch out if expression == 0
         branch_ins = ["branch(%s);" % (loop_start_label)]  # Instruction to branch back to the start of the loop (right before evaluating the expression again)
