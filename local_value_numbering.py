@@ -20,9 +20,9 @@ def LVN(program):
     val_num = 1
     saved_instr = 0 
 
-    binary_op_re = re.compile('(vr\d+) = (addi|addf|muli|mulf|subi|subf|divi|divf)\((vr\d+), ?(vr\d+)\);')
+    binary_op_re = re.compile('(vr\d+) = (addi|addf|muli|mulf|subi|subf|divi|divf)\((vr\d+|_new_name\d+), ?(vr\d+|_new_name\d+)\);')
     unary_op_re = re.compile("(vr\d+) = (vr_int2float|vr_float2int)\((vr\d+)\);")
-    convert_re = re.compile('(vr\d+) = (int2vr|float2vr)\(([\d.]+)\);') 
+    convert_re = re.compile('(vr\d+) = (int2vr|float2vr|)\(([\d.]+)\);')
     
     for line in program:
         strip_line = line.strip() #stripping whitespace
