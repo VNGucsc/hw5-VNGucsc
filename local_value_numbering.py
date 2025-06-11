@@ -52,7 +52,7 @@ def LVN(program):
             if key in num_table:
                 saved_instr += 1
                 existing_reg = vn_reg_table[num_table[key]]
-                opt_ir.append(f'{dest}_{val_num} = {existing_reg};')
+                opt_ir.append(f'{dest} = {existing_reg};')
                 register_table[dest] = num_table[key]
                 new_var.append(f'{dest}_{val_num}')
             else:
@@ -67,7 +67,7 @@ def LVN(program):
             #dest and arg are vr's. op is op
 
             num = register_table.setdefault(arg,val_num)
-            if arg not in reg_table:
+            if arg not in register_table:
                 val_num += 1
             
             key = (op, num)
@@ -75,7 +75,7 @@ def LVN(program):
             if key in num_table:
                 saved_instr += 1
                 existing_reg = vn_reg_table[num_table[key]]
-                opt_ir.append(f'{dest}_{val_num} = {existing_reg};')
+                opt_ir.append(f'{dest} = {existing_reg};')
                 register_table[dest] = num_table[key]
                 new_var.append(f'{dest}_{val_num}')
             else:
@@ -92,7 +92,7 @@ def LVN(program):
                 if key in num_table:
                     saved_instr += 1
                     existing_reg = vn_reg_table[num_table[key]]
-                    opt_ir.append(f'{dest}_{val_num} = {existing_reg};')
+                    opt_ir.append(f'{dest} = {existing_reg};')
                     register_table[dest] = num_table[key]
                     new_var.append(f'{dest}_{val_num}')
                 else:
