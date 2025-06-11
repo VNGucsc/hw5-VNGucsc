@@ -18,18 +18,15 @@ def LVN(program):
     opt_ir = [] #new_ir
     new_var = []
     val_num = 1 #value_number
-    temp_var_used = 0 #temp_var_count
     saved_instr = 0 #saved_instr_count DELETE ALL THIS BEFORE PUSHING
 
-    binary_op_re = re.compile('(vr\d+) = (addi|addf|muli|mulf|subi|subf|divi|divf)\((vr\d+), ?(vr\d+)\);') #match vrX = op(vrX,vrX);
-    unary_op_re = re.compile("(vr\d+) = (vr_int2float|vr_float2int)\((vr\d+)\);") #match vrX = op(vrX)
-    convert_re = re.compile('(vr\d+) = (int2vr|float2vr)\(([\d.]+)\);') #match vrX = op(int/float)
-    #label_branch_re = re.compile('(branch|beq|return|label[\d]+:|vr\d+:|[^=]*:).*') #match labelX: or branch(labelX) or return or beq[vrX, vrX, labelX]
+    binary_op_re = re.compile('(vr\d+) = (addi|addf|muli|mulf|subi|subf|divi|divf)\((vr\d+), ?(vr\d+)\);')
+    unary_op_re = re.compile("(vr\d+) = (vr_int2float|vr_float2int)\((vr\d+)\);")
+    convert_re = re.compile('(vr\d+) = (int2vr|float2vr)\(([\d.]+)\);') 
     
     for line in program:
         strip_line = line.strip() #stripping whitespace
         
-        #bin_match = binary_op_re.match(strip_line)
         if binary_op_re.match(strip_line):
             #print("Found Binary Op\n")
             dest, op, arg1, arg2 = bin_op_re.match(strip_line).groups()
@@ -66,7 +63,6 @@ def LVN(program):
                 val_num += 1
 
         elif unary_op_re.match(line):
-            #print('Found Unary Op\n')
             dest, op, arg = unary_op_re.match(line).groups()
             #dest and arg are vr's. op is op
 
@@ -89,8 +85,6 @@ def LVN(program):
                 opt_ir.append(line)
                 val_num += 1
         elif convert_re.match(strip_line):
-            #print('Found convert op\n')
-            #convert_match = convert_re.match(strip_line)
             if convert_re.match(strip_line):
                 dest, op, val = convert_re.match(strip_line).groups()
                 key = (op,val)
