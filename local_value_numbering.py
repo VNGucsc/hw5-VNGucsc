@@ -12,13 +12,13 @@ def LVN(program):
     # registers and program variables)
 
     # 3. a number with how many instructions were replaced
-    num_table = {} #vn_table
-    register_table = {} #reg_table
-    vn_reg_table = {} #vn_to_reg
-    opt_ir = [] #new_ir
+    num_table = {}
+    register_table = {}
+    vn_reg_table = {} 
+    opt_ir = []
     new_var = []
-    val_num = 1 #value_number
-    saved_instr = 0 #saved_instr_count DELETE ALL THIS BEFORE PUSHING
+    val_num = 1
+    saved_instr = 0 
 
     binary_op_re = re.compile('(vr\d+) = (addi|addf|muli|mulf|subi|subf|divi|divf)\((vr\d+), ?(vr\d+)\);')
     unary_op_re = re.compile("(vr\d+) = (vr_int2float|vr_float2int)\((vr\d+)\);")
@@ -29,13 +29,13 @@ def LVN(program):
         
         if binary_op_re.match(strip_line):
             #print("Found Binary Op\n")
-            dest, op, arg1, arg2 = bin_op_re.match(strip_line).groups()
+            dest, op, arg1, arg2 = binary_op_re.match(strip_line).groups()
             #dest, arg1, and arg2 are vr's. op is op
 
-            num1 = register_table.setdefault(arg1,value_number)
+            num1 = register_table.setdefault(arg1,val_num)
             if arg1 not in register_table:
                 value_number += 1
-            num2 = register_table.setdefault(arg2,value_member)
+            num2 = register_table.setdefault(arg2,val_num)
             if arg2 not in register_table:
                 value_number += 1
         
@@ -84,6 +84,7 @@ def LVN(program):
                 vn_reg_table[val_num] = dest
                 opt_ir.append(line)
                 val_num += 1
+    
         elif convert_re.match(strip_line):
             if convert_re.match(strip_line):
                 dest, op, val = convert_re.match(strip_line).groups()
